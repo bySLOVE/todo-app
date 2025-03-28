@@ -1,19 +1,25 @@
 import React from "react";
 import "./Task.css";
 
-const Task = ({ description, created, completed}) => {
+const Task = ({ id, description, created, completed, onDeleted, onToggleCompleted }) => {
   return (
     <li className={completed ? "completed" : ""}>
-            <div class="view">
-              <input class="toggle" type="checkbox" defaultChecked={completed} />
-              <label>
-                <span class="description">{description}</span>
-                <span class="created">{created}</span>
-              </label>
-              <button class="icon icon-edit"></button>
-              <button class="icon icon-destroy"></button>
-            </div>
-          </li>
+      <div className="view">
+        <input 
+        className="toggle" 
+        type="checkbox" 
+        defaultChecked={completed}
+        onChange={() => onToggleCompleted(id)} />
+        <label>
+          <span className="description">
+            {description}
+          </span>
+          <span className="created">{created}</span>
+        </label>
+        <button className="icon icon-edit"></button>
+        <button className="icon icon-destroy" onClick={() => onDeleted(id)}></button>
+      </div>
+    </li>
   );
 };
 
