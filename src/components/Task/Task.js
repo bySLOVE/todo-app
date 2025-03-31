@@ -11,9 +11,7 @@ const Task = ({ id, description, created, completed, onDeleted, onToggleComplete
         defaultChecked={completed}
         onChange={() => onToggleCompleted(id)} />
         <label>
-          <span className="description">
-            {description}
-          </span>
+          <span className="description">{description}</span>
           <span className="created">{created}</span>
         </label>
         <button className="icon icon-edit"></button>

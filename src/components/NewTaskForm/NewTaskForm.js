@@ -1,13 +1,40 @@
-import React from "react";
+import React, {Component} from "react";
+ 
+
+export default class NewTaskForm extends Component {
+  state = {
+    description: ""
+  };
+
+  onLabelChange = (event) => {
+    this.setState({description: event.target.value});
+  };
+
+  onKeyDown = (event) => {
+    if (event.key === "Enter") {
+      this.onSubmit(event);
+    }
+  };
+
+  onSubmit = (event) => {
+    if (this.state.description.trim()){
+      this.props.onTaskAdded(this.state.description);
+      this.setState({description: ""})
+    }
+  };
 
 
-const NewTaskForm = () => {
-    return (
-        <header className="header">
-        <h1>todos</h1>
-        <input className="new-todo" placeholder="What needs to be done?" autoFocus/>
-      </header>
-    );
+render() {
+  return (
+    <header className="header">
+    <h1>todos</h1>
+    <input className="new-todo" 
+    placeholder="What needs to be done?" 
+    autoFocus
+    value={this.state.description}
+    onChange={this.onLabelChange}
+    onKeyDown={this.onKeyDown}/>
+  </header>
+);
+}
 };
-
-export default NewTaskForm;
