@@ -5,6 +5,7 @@ import Footer from "../Footer/Footer";
 import "./App.css";
 
 
+
 export default class App extends Component {
 
   state = {
@@ -12,6 +13,7 @@ export default class App extends Component {
       { id: 1, description: "Completed task", created: "created 17 seconds ago", completed: true },
       { id: 2, description: "Editing task", created: "created 5 minutes ago", completed: false },
       { id: 3, description: "Active task", created: "created 10 minutes ago", completed: false },
+      { id: 4 }
     ],
     filter: "all",
   };
@@ -65,7 +67,7 @@ export default class App extends Component {
       const newTask = {
         id: maxId,
         description,
-        completed: false
+        completed: false,
       };
 
       return {
