@@ -10,9 +10,9 @@ export default class App extends Component {
 
   state = {
     tasks: [
-      { id: 1, description: "Completed task", created: "created 17 seconds ago", completed: true },
-      { id: 2, description: "Editing task", created: "created 5 minutes ago", completed: false },
-      { id: 3, description: "Active task", created: "created 10 minutes ago", completed: false },
+      { id: 1, description: "Completed task", completed: true },
+      { id: 2, description: "Editing task"},
+      { id: 3, description: "Active task" },
       { id: 4 }
     ],
     filter: "all",
@@ -66,6 +66,7 @@ export default class App extends Component {
 
       const newTask = {
         id: maxId,
+        created: new Date(),
         description,
         completed: false,
       };
@@ -83,6 +84,15 @@ export default class App extends Component {
     }));
   };
 
+  editTask = (id, newDescription) => {
+    this.setState(({ tasks }) => ({
+      tasks: tasks.map((task) =>
+        task.id === id ? { ...task, description: newDescription } : task
+      ),
+    }));
+  };
+
+
   render () {
     const filteredTasks = this.getFilteredTasks()
     const activeTaskCount = this.state.tasks.filter((task) => !task.completed).length
@@ -93,7 +103,8 @@ export default class App extends Component {
           <TaskList 
           tasks={filteredTasks}
           onDeleted = {this.deleteItem} 
-          onToggleCompleted={this.toggleCompleted}/>
+          onToggleCompleted={this.toggleCompleted}
+          onEdit={this.editTask}/>
           <Footer
           filter={this.state.filter}
           setFilter={this.setFilter}

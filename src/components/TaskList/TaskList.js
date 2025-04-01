@@ -5,7 +5,7 @@ import "./TaskList.css";
 
 export default class TaskList extends Component {
     render() {
-      const { tasks, onDeleted, onToggleCompleted } = this.props;
+      const { tasks, onDeleted, onToggleCompleted, onEdit } = this.props;
       return (
         <ul className="todo-list">
           {tasks.map((task) => (
@@ -17,6 +17,7 @@ export default class TaskList extends Component {
               completed={task.completed}
               onDeleted={onDeleted}
               onToggleCompleted={onToggleCompleted}
+              onEdit={onEdit}
             />
           ))}
         </ul>
@@ -39,5 +40,6 @@ export default class TaskList extends Component {
     ),
     onDeleted: PropTypes.func.isRequired,
     onToggleCompleted: PropTypes.func.isRequired,
+    onEdit: PropTypes.func.isRequired,
   };
 
