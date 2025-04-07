@@ -11,6 +11,7 @@ export default class Task extends Component {
       newDescription: this.props.description,
       timeAgo: this.getFormattedTime(),
     };
+    this.inputRef = React.createRef();
     this.handleEditClick = this.handleEditClick.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
@@ -21,6 +22,16 @@ export default class Task extends Component {
     this.interval = setInterval(() => {
       this.setState({ timeAgo: this.getFormattedTime() });
     }, 60000);
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (!prevState.isEditing && this.state.isEditing) {
+      const input = this.inputRef.current;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }
   }
 
   componentWillUnmount() {
@@ -65,7 +76,14 @@ export default class Task extends Component {
         <div className="view">
           <input className="toggle" type="checkbox" checked={completed} onChange={() => onToggleCompleted(id)} />
           {isEditing ? (
-            <input type="text" value={newDescription} onChange={this.handleChange} onKeyDown={this.handleKeyDown} />
+            <input
+              type="text"
+              className="editing"
+              value={newDescription}
+              onChange={this.handleChange}
+              onKeyDown={this.handleKeyDown}
+              ref={this.inputRef}
+            />
           ) : (
             <>
               <label>

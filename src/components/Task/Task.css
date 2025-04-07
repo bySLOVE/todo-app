@@ -65,3 +65,17 @@
 .todo-list li.editing:last-child {
 	margin-bottom: -1px;
 }
+
+.todo-list li input.editing {
+	padding: 15px 85px 15px 60px;
+	width: 100%;
+	font-size: 20px;
+	font-family: inherit;
+	color: #4d4d4d;
+	border: none;
+	outline: none;
+	background: none;
+	box-sizing: border-box;
+	line-height: 1.2;
+	font-weight: 400;
+  }
