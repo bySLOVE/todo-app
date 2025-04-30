@@ -16,6 +16,8 @@ export default class TaskList extends Component {
             description={task.description}
             created={task.created}
             completed={task.completed}
+            minutes={task.minutes}
+            seconds={task.seconds}
             onDeleted={onDeleted}
             onToggleCompleted={onToggleCompleted}
             onEdit={onEdit}
@@ -37,6 +39,8 @@ TaskList.propTypes = {
       description: PropTypes.string,
       created: PropTypes.string,
       completed: PropTypes.bool,
+      minutes: PropTypes.number,
+      seconds: PropTypes.number,
     })
   ),
   onDeleted: PropTypes.func.isRequired,

@@ -9,12 +9,7 @@ export default class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      tasks: [
-        { id: 1, description: 'Completed task' },
-        { id: 2, description: 'Editing task' },
-        { id: 3, description: 'Active task' },
-        { id: 4 },
-      ],
+      tasks: [],
       filter: 'all',
     };
     this.setFilter = this.setFilter.bind(this);
@@ -58,12 +53,12 @@ export default class App extends Component {
   /// переключение состояния
   toggleCompleted(id) {
     this.setState(({ tasks }) => ({
-      tasks: tasks.map((tasks) => (tasks.id === id ? { ...tasks, completed: !tasks.completed } : tasks)),
+      tasks: tasks.map((task) => (task.id === id ? { ...task, completed: !task.completed } : task)),
     }));
   }
 
   /// добавление новой задачи
-  addTask(description) {
+  addTask(description, minutes, seconds) {
     this.setState(({ tasks }) => {
       const maxId = tasks.length > 0 ? Math.max(...tasks.map((task) => task.id)) + 1 : 1;
 
@@ -72,6 +67,8 @@ export default class App extends Component {
         created: new Date(),
         description,
         completed: false,
+        minutes,
+        seconds,
       };
 
       return {
