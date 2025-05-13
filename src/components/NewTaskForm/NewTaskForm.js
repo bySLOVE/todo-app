@@ -1,33 +1,33 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-export default class NewTaskForm extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      description: '',
-      minutes: '',
-      seconds: '',
-    };
-    this.onLabelChange = this.onLabelChange.bind(this);
-    this.onKeyDown = this.onKeyDown.bind(this);
-    this.onSubmit = this.onSubmit.bind(this);
-    this.onInputChange = this.onInputChange.bind(this);
-  }
+function NewTaskForm({ onTaskAdded }) {
+  const [description, setDescription] = useState('');
+  const [minutes, setMinutes] = useState('');
+  const [seconds, setSeconds] = useState('');
 
-  onLabelChange(event) {
-    this.setState({ description: event.target.value });
-  }
+  const onLabelChange = (event) => setDescription(event.target.value);
 
-  onKeyDown(event) {
-    if (event.key === 'Enter') {
-      this.onSubmit(event);
+  const onInputChange = (e) => {
+    const { name, value } = e.target;
+
+    if ((name === 'minutes' || name === 'seconds') && /[^0-9]/.test(value)) {
+      return;
     }
-  }
 
-  onSubmit(event) {
+    if (name === 'minutes') setMinutes(value);
+    if (name === 'seconds') setSeconds(value);
+  };
+
+  const onKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      onSubmit(event);
+    }
+  };
+
+  const onSubmit = (event) => {
     event.preventDefault();
-    const { description, minutes, seconds } = this.state;
+
     const min = Number(minutes);
     const sec = Number(seconds);
     if (!description.trim()) {
@@ -39,57 +39,49 @@ export default class NewTaskForm extends Component {
       alert('Время не может быть 0 минут и 0 секунд');
       return;
     }
-    this.props.onTaskAdded(description, Number(minutes), Number(seconds));
-    this.setState({ description: '', minutes: '', seconds: '' });
-  }
+    onTaskAdded(description, min, sec);
+    setDescription('');
+    setMinutes('');
+    setSeconds('');
+  };
 
-  onInputChange(e) {
-    const { name, value } = e.target;
-
-    if ((name === 'minutes' || name === 'seconds') && /[^0-9]/.test(value)) {
-      return;
-    }
-
-    this.setState({ [name]: value });
-  }
-
-  render() {
-    return (
-      <header className="header">
-        <h1>todos</h1>
-        <form className="new-todo-form" onSubmit={this.onSubmit}>
-          <input
-            className="new-todo"
-            placeholder="What needs to be done?"
-            autoFocus
-            value={this.state.description}
-            onChange={this.onLabelChange}
-            onKeyDown={this.onKeyDown}
-          />
-          <input
-            type="text"
-            name="minutes"
-            className="new-todo-form__timer"
-            placeholder="Min"
-            value={this.state.minutes}
-            onChange={this.onInputChange}
-            onKeyDown={this.onKeyDown}
-          />
-          <input
-            type="text"
-            name="seconds"
-            className="new-todo-form__timer"
-            placeholder="Sec"
-            value={this.state.seconds}
-            onChange={this.onInputChange}
-            onKeyDown={this.onKeyDown}
-          />
-        </form>
-      </header>
-    );
-  }
+  return (
+    <header className="header">
+      <h1>todos</h1>
+      <form className="new-todo-form" onSubmit={onSubmit}>
+        <input
+          className="new-todo"
+          placeholder="What needs to be done?"
+          autoFocus
+          value={description}
+          onChange={onLabelChange}
+          onKeyDown={onKeyDown}
+        />
+        <input
+          type="text"
+          name="minutes"
+          className="new-todo-form__timer"
+          placeholder="Min"
+          value={minutes}
+          onChange={onInputChange}
+          onKeyDown={onKeyDown}
+        />
+        <input
+          type="text"
+          name="seconds"
+          className="new-todo-form__timer"
+          placeholder="Sec"
+          value={seconds}
+          onChange={onInputChange}
+          onKeyDown={onKeyDown}
+        />
+      </form>
+    </header>
+  );
 }
 
 NewTaskForm.propTypes = {
   onTaskAdded: PropTypes.func.isRequired,
 };
+
+export default NewTaskForm;

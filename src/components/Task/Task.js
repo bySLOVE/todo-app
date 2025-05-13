@@ -1,157 +1,112 @@
-import React, { Component } from 'react';
-import './Task.css';
+import React, { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import PropTypes from 'prop-types';
+import './Task.css';
 
-export default class Task extends Component {
-  constructor(props) {
-    super(props);
-    const initialTime = (props.minutes || 0) * 60 + (props.seconds || 0);
-    this.state = {
-      isEditing: false,
-      newDescription: this.props.description,
-      timeAgo: this.getFormattedTime(),
-      remainingTime: initialTime,
-      isRunning: false,
-    };
-    this.inputRef = React.createRef();
-    this.handleEditClick = this.handleEditClick.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.handleKeyDown = this.handleKeyDown.bind(this);
-    this.handleSaveClick = this.handleSaveClick.bind(this);
-    this.startTimer = this.startTimer.bind(this);
-    this.pauseTimer = this.pauseTimer.bind(this);
-  }
+function Task({
+  id,
+  description,
+  created,
+  completed,
+  onDeleted,
+  onToggleCompleted,
+  onEdit,
+  remainingTime,
+  isRunning,
+  onToggleTimer,
+  onTick,
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [newDescription, setNewDescription] = useState(description);
+  const [timeAgo, setTimeAgo] = useState(getFormattedTime(created));
+  const inputRef = useRef(null);
+  const timerRef = useRef(null);
 
-  componentDidMount() {
-    this.interval = setInterval(() => {
-      this.setState({ timeAgo: this.getFormattedTime() });
-    }, 60000);
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (!prevState.isEditing && this.state.isEditing) {
-      const input = this.inputRef.current;
-      if (input) {
-        input.focus();
-        input.select();
-      }
-    }
-    if (!prevProps.completed && this.props.completed) {
-      clearInterval(this.timer);
-      this.setState({ remainingTime: 0, isRunning: false });
-    }
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.interval);
-    clearInterval(this.timer);
-  }
-
-  getFormattedTime() {
-    const createdDate = new Date(this.props.created);
+  function getFormattedTime(date) {
+    const createdDate = new Date(date);
     if (isNaN(createdDate.getTime())) {
-      console.error('Invalid date:', this.props.created);
+      console.error('Invalid date:', date);
       return 'Invalid Date';
     }
     return `Created ${formatDistanceToNow(createdDate, { addSuffix: true })}`;
   }
 
-  handleEditClick() {
-    this.setState({ isEditing: true });
-  }
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeAgo(getFormattedTime(created));
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [created]);
 
-  handleChange(event) {
-    this.setState({ newDescription: event.target.value });
-  }
-
-  handleKeyDown(event) {
-    if (event.key === 'Enter') {
-      this.handleSaveClick();
-    } else if (event.key === 'Escape') {
-      this.setState({ isEditing: false, newDescription: this.props.description });
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
     }
-  }
+  }, [isEditing]);
 
-  handleSaveClick() {
-    const { id } = this.props;
-    const { newDescription } = this.state;
-    this.props.onEdit(id, newDescription);
-    this.setState({ isEditing: false });
-  }
+  useEffect(() => {
+    if (completed || remainingTime === 0) {
+      clearInterval(timerRef.current);
+    }
+  }, [completed, remainingTime]);
 
-  startTimer() {
-    if (this.state.isRunning || this.state.remainingTime <= 0) return;
+  useEffect(() => {
+    clearInterval(timerRef.current);
+    if (isRunning) {
+      timerRef.current = setInterval(() => {
+        onTick(id);
+      }, 1000);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [isRunning, onTick, id]);
 
-    this.timer = setInterval(() => {
-      this.setState((prevState) => {
-        if (prevState.remainingTime <= 1) {
-          clearInterval(this.timer);
-          return { remainingTime: 0, isRunning: false };
-        }
-        return { remainingTime: prevState.remainingTime - 1 };
-      });
-    }, 1000);
+  const handleSaveClick = () => {
+    if (newDescription.trim() === '') return;
+    onEdit(id, newDescription.trim());
+    setIsEditing(false);
+  };
 
-    this.setState({ isRunning: true });
-  }
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSaveClick();
+    } else if (e.key === 'Escape') {
+      setNewDescription(description);
+      setIsEditing(false);
+    }
+  };
 
-  pauseTimer() {
-    clearInterval(this.timer);
-    this.setState({ isRunning: false });
-  }
+  const formattedTime = `${String(Math.floor(remainingTime / 60)).padStart(2, '0')}:${String(
+    remainingTime % 60
+  ).padStart(2, '0')}`;
 
-  render() {
-    const { id, description, completed, onDeleted, onToggleCompleted } = this.props;
-    const { isEditing, newDescription, timeAgo } = this.state;
-    const minutes = Math.floor(this.state.remainingTime / 60);
-    const seconds = this.state.remainingTime % 60;
-    const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  const canStartTimer = !completed && remainingTime > 0 && !isRunning;
 
-    return (
-      <li className={`todo-list-item ${completed ? 'completed' : ''} ${isEditing ? 'editing' : ''}`}>
-        <div className="view">
-          <input className="toggle" type="checkbox" checked={completed} onChange={() => onToggleCompleted(id)} />
-          <label>
-            <span className="title">{description}</span>
-            <div className="timer-controls">
-              <button className="icon icon-play" onClick={this.startTimer}></button>
-              <button className="icon icon-pause" onClick={this.pauseTimer}></button>
-              <span className="timer">{formattedTime}</span>
-            </div>
-            <span className="created">{timeAgo}</span>
-          </label>
-          <button className="icon icon-edit" onClick={this.handleEditClick}></button>
-          <button className="icon icon-destroy" onClick={() => onDeleted(id)}></button>
-        </div>
-        <input
-          type="text"
-          className="edit"
-          value={newDescription}
-          onChange={this.handleChange}
-          onKeyDown={this.handleKeyDown}
-          ref={this.inputRef}
-        />
-      </li>
-    );
-  }
+  return (
+    <li className={`todo-list-item ${completed ? 'completed' : ''} ${isEditing ? 'editing' : ''}`}>
+      <div className="view">
+        <input className="toggle" type="checkbox" checked={completed} onChange={() => onToggleCompleted(id)} />
+        <label>
+          <span className="title">{description}</span>
+          <div className="timer-controls">
+            <button className="icon icon-play" onClick={() => canStartTimer && onToggleTimer(id)} />
+            <button className="icon icon-pause" onClick={() => isRunning && onToggleTimer(id)} />
+            <span className="timer">{formattedTime}</span>
+          </div>
+          <span className="created">{timeAgo}</span>
+        </label>
+        <button className="icon icon-edit" onClick={() => setIsEditing(true)} />
+        <button className="icon icon-destroy" onClick={() => onDeleted(id)} />
+      </div>
+      <input
+        type="text"
+        className="edit"
+        value={newDescription}
+        onChange={(e) => setNewDescription(e.target.value)}
+        onKeyDown={handleKeyDown}
+        ref={inputRef}
+      />
+    </li>
+  );
 }
 
-Task.defaultProps = {
-  description: 'new Task',
-  created: new Date(),
-  completed: false,
-  onDeleted: () => {},
-  onToggleCompleted: () => {},
-  onEdit: () => {},
-};
-
-Task.propTypes = {
-  id: PropTypes.number.isRequired,
-  description: PropTypes.string,
-  created: PropTypes.string.isRequired,
-  completed: PropTypes.bool,
-  onDeleted: PropTypes.func.isRequired,
-  onToggleCompleted: PropTypes.func.isRequired,
-  onEdit: PropTypes.func.isRequired,
-};
+export default Task;
