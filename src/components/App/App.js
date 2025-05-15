@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import NewTaskForm from '../NewTaskForm/NewTaskForm';
 import TaskList from '../TaskList/TaskList';
@@ -13,6 +13,26 @@ function App() {
     if (filter === 'completed') return tasks.filter((task) => task.completed);
     return tasks;
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTasks((prevTasks) =>
+        prevTasks.map((task) => {
+          if (task.isRunning && task.remainingTime > 0) {
+            const newTime = task.remainingTime - 1;
+            return {
+              ...task,
+              remainingTime: newTime,
+              isRunning: newTime === 0 ? false : task.isRunning,
+            };
+          }
+          return task;
+        })
+      );
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const deleteItem = (id) => {
     setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
@@ -55,22 +75,6 @@ function App() {
     );
   };
 
-  const tick = (id) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) => {
-        if (task.id === id && task.remainingTime > 0) {
-          const newTime = task.remainingTime - 1;
-          return {
-            ...task,
-            remainingTime: newTime,
-            isRunning: newTime === 0 ? false : task.isRunning,
-          };
-        }
-        return task;
-      })
-    );
-  };
-
   const clearCompletedTasks = () => {
     setTasks((prevTasks) => prevTasks.filter((task) => !task.completed));
   };
@@ -94,7 +98,6 @@ function App() {
           onToggleCompleted={handleCompleteToggle}
           onEdit={editTask}
           onToggleTimer={toggleTimer}
-          onTick={tick}
         />
         <Footer
           filter={filter}

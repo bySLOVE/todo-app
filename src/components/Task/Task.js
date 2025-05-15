@@ -2,6 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import './Task.css';
 
+function getFormattedTime(date) {
+  const createdDate = new Date(date);
+  if (isNaN(createdDate.getTime())) {
+    console.error('Invalid date:', date);
+    return 'Invalid Date';
+  }
+  return `Created ${formatDistanceToNow(createdDate, { addSuffix: true })}`;
+}
+
 function Task({
   id,
   description,
@@ -13,22 +22,11 @@ function Task({
   remainingTime,
   isRunning,
   onToggleTimer,
-  onTick,
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [newDescription, setNewDescription] = useState(description);
   const [timeAgo, setTimeAgo] = useState(getFormattedTime(created));
   const inputRef = useRef(null);
-  const timerRef = useRef(null);
-
-  function getFormattedTime(date) {
-    const createdDate = new Date(date);
-    if (isNaN(createdDate.getTime())) {
-      console.error('Invalid date:', date);
-      return 'Invalid Date';
-    }
-    return `Created ${formatDistanceToNow(createdDate, { addSuffix: true })}`;
-  }
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -43,22 +41,6 @@ function Task({
       inputRef.current.select();
     }
   }, [isEditing]);
-
-  useEffect(() => {
-    if (completed || remainingTime === 0) {
-      clearInterval(timerRef.current);
-    }
-  }, [completed, remainingTime]);
-
-  useEffect(() => {
-    clearInterval(timerRef.current);
-    if (isRunning) {
-      timerRef.current = setInterval(() => {
-        onTick(id);
-      }, 1000);
-    }
-    return () => clearInterval(timerRef.current);
-  }, [isRunning, onTick, id]);
 
   const handleSaveClick = () => {
     if (newDescription.trim() === '') return;

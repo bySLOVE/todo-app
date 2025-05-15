@@ -3,7 +3,7 @@ import React from 'react';
 import Task from '../Task/Task';
 import './TaskList.css';
 
-function TaskList({ tasks, onDeleted, onToggleCompleted, onEdit, onToggleTimer, onTick }) {
+function TaskList({ tasks, onDeleted, onToggleCompleted, onEdit, onToggleTimer }) {
   return (
     <ul className="todo-list">
       {tasks.map((task) => (
@@ -17,7 +17,6 @@ function TaskList({ tasks, onDeleted, onToggleCompleted, onEdit, onToggleTimer, 
           onToggleCompleted={onToggleCompleted}
           onEdit={onEdit}
           onToggleTimer={onToggleTimer}
-          onTick={onTick}
           remainingTime={task.remainingTime}
           isRunning={task.isRunning}
         />
