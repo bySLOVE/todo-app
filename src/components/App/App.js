@@ -1,119 +1,113 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import NewTaskForm from '../NewTaskForm/NewTaskForm';
 import TaskList from '../TaskList/TaskList';
 import Footer from '../Footer/Footer';
 import './App.css';
 
-export default class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      tasks: [
-        { id: 1, description: 'Completed task' },
-        { id: 2, description: 'Editing task' },
-        { id: 3, description: 'Active task' },
-        { id: 4 },
-      ],
-      filter: 'all',
-    };
-    this.setFilter = this.setFilter.bind(this);
-    this.getFilteredTasks = this.getFilteredTasks.bind(this);
-    this.deleteItem = this.deleteItem.bind(this);
-    this.toggleCompleted = this.toggleCompleted.bind(this);
-    this.addTask = this.addTask.bind(this);
-    this.clearCompletedTasks = this.clearCompletedTasks.bind(this);
-    this.editTask = this.editTask.bind(this);
-  }
-
-  setFilter(filter) {
-    this.setState({ filter });
-  }
-
-  getFilteredTasks() {
-    const { tasks, filter } = this.state;
-
-    if (filter === 'active') {
-      return tasks.filter((task) => !task.completed);
-    }
-
-    if (filter === 'completed') {
-      return tasks.filter((task) => task.completed);
-    }
+function App() {
+  const [tasks, setTasks] = useState([]);
+  const [filter, setFilter] = useState('all');
+  const getFilteredTasks = () => {
+    if (filter === 'active') return tasks.filter((task) => !task.completed);
+    if (filter === 'completed') return tasks.filter((task) => task.completed);
     return tasks;
-  }
+  };
 
-  /// удаление задачи
-  deleteItem(id) {
-    this.setState(({ tasks }) => {
-      const idx = tasks.findIndex((el) => el.id === id);
-      const newArray = [...tasks.slice(0, idx), ...tasks.slice(idx + 1)];
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTasks((prevTasks) =>
+        prevTasks.map((task) => {
+          if (task.isRunning && task.remainingTime > 0) {
+            const newTime = task.remainingTime - 1;
+            return {
+              ...task,
+              remainingTime: newTime,
+              isRunning: newTime === 0 ? false : task.isRunning,
+            };
+          }
+          return task;
+        })
+      );
+    }, 1000);
 
-      return {
-        tasks: newArray,
-      };
-    });
-  }
+    return () => clearInterval(interval);
+  }, []);
 
-  /// переключение состояния
-  toggleCompleted(id) {
-    this.setState(({ tasks }) => ({
-      tasks: tasks.map((tasks) => (tasks.id === id ? { ...tasks, completed: !tasks.completed } : tasks)),
-    }));
-  }
+  const deleteItem = (id) => {
+    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+  };
 
-  /// добавление новой задачи
-  addTask(description) {
-    this.setState(({ tasks }) => {
-      const maxId = tasks.length > 0 ? Math.max(...tasks.map((task) => task.id)) + 1 : 1;
+  const addTask = (description, minutes, seconds) => {
+    const maxId = tasks.length > 0 ? Math.max(...tasks.map((task) => task.id)) + 1 : 1;
+    const totalSeconds = parseInt(minutes || '0', 10) * 60 + parseInt(seconds || '0', 10);
+    const newTask = {
+      id: maxId,
+      created: new Date(),
+      description,
+      completed: false,
+      remainingTime: totalSeconds,
+      isRunning: false,
+    };
 
-      const newTask = {
-        id: maxId,
-        created: new Date(),
-        description,
-        completed: false,
-      };
+    setTasks((prevTasks) => [...prevTasks, newTask]);
+  };
 
-      return {
-        tasks: [...tasks, newTask],
-      };
-    });
-  }
-
-  /// чистка выполненных заданий
-  clearCompletedTasks() {
-    this.setState(({ tasks }) => ({
-      tasks: tasks.filter((task) => !task.completed),
-    }));
-  }
-
-  editTask(id, newDescription) {
-    this.setState(({ tasks }) => ({
-      tasks: tasks.map((task) => (task.id === id ? { ...task, description: newDescription } : task)),
-    }));
-  }
-
-  render() {
-    const filteredTasks = this.getFilteredTasks();
-    const activeTaskCount = this.state.tasks.filter((task) => !task.completed).length;
-    return (
-      <section className="todoapp">
-        <NewTaskForm onTaskAdded={this.addTask} />
-        <section className="main">
-          <TaskList
-            tasks={filteredTasks}
-            onDeleted={this.deleteItem}
-            onToggleCompleted={this.toggleCompleted}
-            onEdit={this.editTask}
-          />
-          <Footer
-            filter={this.state.filter}
-            setFilter={this.setFilter}
-            clearCompleted={this.clearCompletedTasks}
-            activeTaskCount={activeTaskCount}
-          />
-        </section>
-      </section>
+  const toggleTimer = (id) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) => {
+        if (task.id === id) {
+          return { ...task, isRunning: !task.isRunning };
+        }
+        return task;
+      })
     );
-  }
+  };
+
+  const handleCompleteToggle = (id) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) => {
+        if (task.id === id) {
+          return { ...task, completed: !task.completed, isRunning: false };
+        }
+        return task;
+      })
+    );
+  };
+
+  const clearCompletedTasks = () => {
+    setTasks((prevTasks) => prevTasks.filter((task) => !task.completed));
+  };
+
+  const editTask = (id, newDescription) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) => (task.id === id ? { ...task, description: newDescription } : task))
+    );
+  };
+
+  const filteredTasks = getFilteredTasks();
+  const activeTaskCount = tasks.filter((task) => !task.completed).length;
+
+  return (
+    <section className="todoapp">
+      <NewTaskForm onTaskAdded={addTask} />
+      <section className="main">
+        <TaskList
+          tasks={filteredTasks}
+          onDeleted={deleteItem}
+          onToggleCompleted={handleCompleteToggle}
+          onEdit={editTask}
+          onToggleTimer={toggleTimer}
+        />
+        <Footer
+          filter={filter}
+          setFilter={setFilter}
+          clearCompleted={clearCompletedTasks}
+          activeTaskCount={activeTaskCount}
+        />
+      </section>
+    </section>
+  );
 }
+
+export default App;
